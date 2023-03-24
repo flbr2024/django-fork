@@ -34,8 +34,9 @@ from django.db.models.functions import (
     Trim,
 )
 from django.db.models.sql.query import get_field_names_from_opts
-from django.test import TestCase, skipUnlessDBFeature
+from django.test import TestCase, ignore_warnings, skipUnlessDBFeature
 from django.test.utils import register_lookup
+from django.utils.deprecation import RemovedInDjango60Warning
 
 from .models import (
     Author,
@@ -733,13 +734,15 @@ class NonAggregateAnnotationTestCase(TestCase):
             salary=Decimal(40000.00),
         )
 
-        qs = (
-            Employee.objects.extra(select={"random_value": "42"})
-            .select_related("store")
-            .annotate(
-                annotated_value=Value(17),
+        # random_value annotation can be removed once deprecation period ends.
+        with ignore_warnings(category=RemovedInDjango60Warning):
+            qs = (
+                Employee.objects.extra(select={"random_value": "42"})
+                .select_related("store")
+                .annotate(
+                    annotated_value=Value(17),
+                )
             )
-        )
 
         rows = [
             (1, "Max", True, 42, "Paine", 23, Decimal(50000.00), store.name, 17),
@@ -783,13 +786,15 @@ class NonAggregateAnnotationTestCase(TestCase):
             salary=Decimal(40000.00),
         )
 
-        qs = (
-            Employee.objects.extra(select={"random_value": "42"})
-            .select_related("store")
-            .annotate(
-                annotated_value=Value(17),
+        # random_value annotation can be removed once deprecation period ends.
+        with ignore_warnings(category=RemovedInDjango60Warning):
+            qs = (
+                Employee.objects.extra(select={"random_value": "42"})
+                .select_related("store")
+                .annotate(
+                    annotated_value=Value(17),
+                )
             )
-        )
 
         rows = [
             (1, "Max", True, 42, "Paine", 23, Decimal(50000.00), store.name, 17),
