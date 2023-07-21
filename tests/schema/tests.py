@@ -50,6 +50,7 @@ from django.db.models import (
     UUIDField,
     Value,
 )
+from django.db.models.expressions import RawSQL
 from django.db.models.fields.json import KeyTextTransform
 from django.db.models.functions import Abs, Cast, Collate, Lower, Random, Upper
 from django.db.models.indexes import IndexExpression
@@ -755,7 +756,9 @@ class SchemaTests(TransactionTestCase):
             field_type, connection.features.introspected_field_types["IntegerField"]
         )
         # Make sure the values were transformed correctly
-        self.assertEqual(Author.objects.extra(where=["thing = 1"]).count(), 2)
+        self.assertEqual(
+            Author.objects.filter(RawSQL("thing = %s", (1,), BooleanField())).count(), 2
+        )
 
     def test_add_field_o2o_nullable(self):
         with connection.schema_editor() as editor:
