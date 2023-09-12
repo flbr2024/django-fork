@@ -783,6 +783,59 @@ class OptimizerTests(SimpleTestCase):
             ],
         )
 
+    def test_rename_model_referenced_by_m2m_through(self):
+        self.assertOptimizesTo(
+            [
+                migrations.CreateModel("Author", []),
+                migrations.CreateModel("Book", []),
+                migrations.CreateModel(
+                    "BookAuthorRole",
+                    [
+                        (
+                            "author",
+                            models.ForeignKey("migrations.author", models.CASCADE),
+                        ),
+                        ("book", models.ForeignKey("migrations.book", models.CASCADE)),
+                    ],
+                ),
+                migrations.AddField(
+                    "book",
+                    "authors",
+                    models.ManyToManyField(
+                        to="migrations.author", through="migrations.BookAuthorRole"
+                    ),
+                ),
+                migrations.RenameModel(
+                    "BookAuthorRole",
+                    "NewBookAuthorRole",
+                ),
+            ],
+            [
+                migrations.CreateModel("Author", []),
+                migrations.CreateModel(
+                    "Book",
+                    [],
+                ),
+                migrations.CreateModel(
+                    "NewBookAuthorRole",
+                    [
+                        (
+                            "author",
+                            models.ForeignKey("migrations.author", models.CASCADE),
+                        ),
+                        ("book", models.ForeignKey("migrations.book", models.CASCADE)),
+                    ],
+                ),
+                migrations.AddField(
+                    "book",
+                    "authors",
+                    models.ManyToManyField(
+                        to="migrations.author", through="migrations.newbookauthorrole"
+                    ),
+                ),
+            ],
+        )
+
     def test_create_model_alter_field(self):
         """
         AlterField should optimize into CreateModel.
