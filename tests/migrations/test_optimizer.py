@@ -649,6 +649,140 @@ class OptimizerTests(SimpleTestCase):
             ],
         )
 
+    def test_rename_model_referenced_by_fk(self):
+        self.assertOptimizesTo(
+            [
+                migrations.CreateModel("Author", []),
+                migrations.CreateModel(
+                    "Book",
+                    [
+                        (
+                            "author",
+                            models.ForeignKey("migrations.author", models.CASCADE),
+                        ),
+                    ],
+                ),
+                migrations.RenameModel("Author", "Person"),
+            ],
+            [
+                migrations.CreateModel("Person", []),
+                migrations.CreateModel(
+                    "Book",
+                    [
+                        (
+                            "author",
+                            models.ForeignKey("migrations.person", models.CASCADE),
+                        ),
+                    ],
+                ),
+            ],
+        )
+
+    def test_rename_model_with_alter_m2m_field(self):
+        self.assertOptimizesTo(
+            [
+                migrations.CreateModel("Library", []),
+                migrations.CreateModel("Author", []),
+                migrations.CreateModel(
+                    "Book",
+                    [
+                        (
+                            "author",
+                            models.ManyToManyField("migrations.author"),
+                        ),
+                    ],
+                ),
+                migrations.AlterField(
+                    "book",
+                    "author",
+                    models.ManyToManyField("migrations.library"),
+                ),
+                migrations.RenameModel("Library", "NewLibrary"),
+            ],
+            [
+                migrations.CreateModel("NewLibrary", []),
+                migrations.CreateModel("Author", []),
+                migrations.CreateModel(
+                    "Book",
+                    [
+                        (
+                            "author",
+                            models.ManyToManyField("migrations.newlibrary"),
+                        ),
+                    ],
+                ),
+            ],
+        )
+
+    def test_rename_model_with_multiple_alter_related_fields(self):
+        self.assertOptimizesTo(
+            [
+                migrations.CreateModel("Author", []),
+                migrations.CreateModel(
+                    "Book",
+                    [
+                        (
+                            "author",
+                            models.ForeignKey("migrations.author", models.CASCADE),
+                        ),
+                    ],
+                ),
+                migrations.AddField(
+                    "author",
+                    "int_field",
+                    models.IntegerField(default=0),
+                ),
+                migrations.CreateModel(
+                    "AnotherModel",
+                    [
+                        ("m2m_field", models.ManyToManyField("migrations.author")),
+                    ],
+                ),
+                migrations.AlterField(
+                    "book",
+                    "author",
+                    models.ForeignKey("migrations.anothermodel", models.CASCADE),
+                ),
+                migrations.RenameModel(
+                    "Author",
+                    "RenamedAuthor",
+                ),
+                migrations.AlterField(
+                    "book",
+                    "author",
+                    models.ForeignKey("migrations.renamedauthor", models.CASCADE),
+                ),
+            ],
+            [
+                migrations.CreateModel(
+                    "RenamedAuthor",
+                    [
+                        ("int_field", models.IntegerField(default=0)),
+                    ],
+                ),
+                migrations.CreateModel(
+                    "AnotherModel",
+                    [
+                        (
+                            "m2m_field",
+                            models.ManyToManyField("migrations.renamedauthor"),
+                        ),
+                    ],
+                ),
+                migrations.CreateModel(
+                    "Book",
+                    [
+                        (
+                            "author",
+                            models.ForeignKey(
+                                "migrations.renamedauthor", models.CASCADE
+                            ),
+                        ),
+                    ],
+                ),
+            ],
+        )
+
     def test_create_model_alter_field(self):
         """
         AlterField should optimize into CreateModel.
