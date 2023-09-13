@@ -52,7 +52,7 @@ class MigrationOptimizer:
                         new_operations.extend(in_between)
                         new_operations.extend(result)
                     elif all(op.reduce(other, app_label) is True for op in in_between):
-                        # Perform a left reduction if all of the reduced in-between
+                        # Perform a left reduction if all of the in-between
                         # operations can optimize through other.
                         new_operations.extend(result)
                         new_operations.extend(in_between)
