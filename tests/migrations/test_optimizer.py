@@ -836,6 +836,40 @@ class OptimizerTests(SimpleTestCase):
             ],
         )
 
+    def test_rename_model_with_self_referrential_m2m(self):
+        self.assertOptimizesTo(
+            [
+                migrations.CreateModel("Author", []),
+                migrations.CreateModel(
+                    "Book",
+                    [
+                        (
+                            "authors",
+                            models.ManyToManyField("migrations.author"),
+                        ),
+                    ],
+                ),
+                migrations.AlterField(
+                    "book",
+                    "authors",
+                    models.ManyToManyField(to="migrations.book"),
+                ),
+                migrations.RenameModel("Book", "RenamedBook"),
+            ],
+            [
+                migrations.CreateModel("Author", []),
+                migrations.CreateModel(
+                    "RenamedBook",
+                    [
+                        (
+                            "authors",
+                            models.ManyToManyField("migrations.renamedbook"),
+                        ),
+                    ],
+                ),
+            ],
+        )
+
     def test_create_model_alter_field(self):
         """
         AlterField should optimize into CreateModel.

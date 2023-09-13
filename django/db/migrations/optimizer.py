@@ -46,30 +46,27 @@ class MigrationOptimizer:
             for j, other in enumerate(operations[i + 1 :]):
                 result = operation.reduce(other, app_label)
                 if isinstance(result, list):
+                    new_reduced_operations = []
                     in_between = operations[i + 1 : i + j + 1]
-                    in_between_reduced = []
-                    for _, op in enumerate(in_between):
-                        in_between_reduced.extend(
-                            op.reduce_related(other, app_label)
-                            or operation.reduce_related(other, app_label)
-                            or [op]
-                        )
                     if right:
-                        new_operations.extend(in_between_reduced)
+                        new_operations.extend(in_between)
                         new_operations.extend(result)
-                    elif all(
-                        op.reduce(other, app_label) is True for op in in_between_reduced
-                    ):
+                    elif all(op.reduce(other, app_label) is True for op in in_between):
                         # Perform a left reduction if all of the reduced in-between
                         # operations can optimize through other.
                         new_operations.extend(result)
-                        new_operations.extend(in_between_reduced)
+                        new_operations.extend(in_between)
                     else:
                         # Otherwise keep trying.
                         new_operations.append(operation)
                         break
-                    new_operations.extend(operations[i + j + 2 :])
-                    return new_operations
+
+                    for _, op in enumerate(new_operations):
+                        new_reduced_operations.extend(
+                            op.reduce_related(other, app_label) or [op]
+                        )
+                    new_reduced_operations.extend(operations[i + j + 2 :])
+                    return new_reduced_operations
                 elif not result:
                     # Can't perform a right reduction.
                     right = False

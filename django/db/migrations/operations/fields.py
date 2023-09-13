@@ -129,23 +129,23 @@ class AddField(FieldOperation):
     def reduce_related(self, operation, app_label):
         from .models import RenameModel
 
-        if not isinstance(operation, RenameModel):
-            return None
-        name, path, args, kwargs = self.field.deconstruct()
-        if kwargs["to"] == f"{app_label}.{operation.old_name_lower}":
-            kwargs["to"] = f"{app_label}.{operation.new_name_lower}"
-        if "through" in kwargs and (
-            kwargs["through"].lower() == f"{app_label}.{operation.old_name_lower}"
-        ):
-            kwargs["through"] = f"{app_label}.{operation.new_name_lower}"
-        new_field = self.field.__class__(*args, **kwargs)
-        return [
-            AddField(
-                model_name=self.model_name,
-                name=self.name,
-                field=new_field,
-            ),
-        ]
+        if isinstance(operation, RenameModel):
+            name, path, args, kwargs = self.field.deconstruct()
+            if kwargs["to"] == f"{app_label}.{operation.old_name_lower}":
+                kwargs["to"] = f"{app_label}.{operation.new_name_lower}"
+            if "through" in kwargs and (
+                kwargs["through"].lower() == f"{app_label}.{operation.old_name_lower}"
+            ):
+                kwargs["through"] = f"{app_label}.{operation.new_name_lower}"
+            new_field = self.field.__class__(*args, **kwargs)
+            return [
+                AddField(
+                    model_name=self.model_name,
+                    name=self.name,
+                    field=new_field,
+                ),
+            ]
+        return super().reduce_related(operation, app_label)
 
     def reduce(self, operation, app_label):
         if isinstance(operation, FieldOperation) and self.is_same_field_operation(
@@ -266,6 +266,28 @@ class AlterField(FieldOperation):
     @property
     def migration_name_fragment(self):
         return "alter_%s_%s" % (self.model_name_lower, self.name_lower)
+
+    def reduce_related(self, operation, app_label):
+        from .models import RenameModel
+
+        if isinstance(operation, RenameModel):
+            # print("inside aaf",operation)
+            name, path, args, kwargs = self.field.deconstruct()
+            if kwargs["to"] == f"{app_label}.{operation.old_name_lower}":
+                kwargs["to"] = f"{app_label}.{operation.new_name_lower}"
+            if "through" in kwargs and (
+                kwargs["through"].lower() == f"{app_label}.{operation.old_name_lower}"
+            ):
+                kwargs["through"] = f"{app_label}.{operation.new_name_lower}"
+            new_field = self.field.__class__(*args, **kwargs)
+            return [
+                AlterField(
+                    model_name=self.model_name,
+                    name=self.name,
+                    field=new_field,
+                ),
+            ]
+        return super().reduce_related(operation, app_label)
 
     def reduce(self, operation, app_label):
         if isinstance(
