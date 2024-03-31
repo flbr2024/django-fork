@@ -91,7 +91,12 @@ Writing an authentication backend
 An authentication backend is a class that implements two required methods:
 ``get_user(user_id)`` and ``authenticate(request, **credentials)``, as well as
 a set of optional permission related :ref:`authorization methods
-<authorization_methods>`.
+<authorization_methods>`. To optimize performance when called from an async
+context the authentication backend can implement the async versions of each
+function (``aget_user(user_id)`` and ``aauthenticate(request, **credentials)``).
+If async versions of these functions are not provided, they will be automatically
+synthesized with ``sync_to_async`` which has
+:ref:`performance considerations <async_performance>`.
 
 The ``get_user`` method takes a ``user_id`` -- which could be a username,
 database ID or whatever, but has to be the primary key of your user object --
@@ -795,9 +800,14 @@ utility methods:
         email address.
 
     .. method:: models.BaseUserManager.get_by_natural_key(username)
+    .. method:: models.BaseUserManager.aget_by_natural_key(username)
 
         Retrieves a user instance using the contents of the field
         nominated by ``USERNAME_FIELD``.
+
+        .. versionchanged:: 5.1
+
+            ``aget_by_natural_key()`` method was added.
 
 Extending Django's default ``User``
 -----------------------------------
