@@ -957,6 +957,10 @@ class TypeErrorBackend:
     def authenticate(self, request, username=None, password=None):
         raise TypeError
 
+    @sensitive_variables("password")
+    async def aauthenticate(self, request, username=None, password=None):
+        raise TypeError
+
 
 class SkippedBackend:
     def authenticate(self):
