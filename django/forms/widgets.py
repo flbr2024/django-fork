@@ -623,9 +623,10 @@ class ChoiceWidget(Widget):
     checked_attribute = {"checked": True}
     option_inherits_attrs = True
 
-    def __init__(self, attrs=None, choices=()):
+    def __init__(self, attrs=None, choices=(), option_attrs=None):
         super().__init__(attrs)
         self.choices = choices
+        self.option_attrs = {} if option_attrs is None else option_attrs.copy()
 
     def __deepcopy__(self, memo):
         obj = copy.copy(self)
@@ -691,9 +692,14 @@ class ChoiceWidget(Widget):
         self, name, value, label, selected, index, subindex=None, attrs=None
     ):
         index = str(index) if subindex is None else "%s_%s" % (index, subindex)
-        option_attrs = (
-            self.build_attrs(self.attrs, attrs) if self.option_inherits_attrs else {}
-        )
+
+        if self.option_attrs:
+            option_attrs = self.build_attrs(self.option_attrs)
+        elif self.option_inherits_attrs:
+            option_attrs = self.build_attrs(self.attrs, attrs)
+        else:
+            option_attrs = {}
+
         if selected:
             option_attrs.update(self.checked_attribute)
         if "id" in option_attrs:
