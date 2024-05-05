@@ -179,6 +179,42 @@ class RadioSelectTest(ChoiceWidgetTest):
         """
         self.check_html(widget, "beatle", "J", html=html)
 
+    def test_constructor_option_attrs(self):
+        """
+        Attributes provided at instantiation are passed to the constituent
+        inputs.
+        """
+        widget = self.widget(
+            attrs={"id": "foo"},
+            option_attrs={"data-test": "custom", "class": "other"},
+            choices=self.beatles,
+        )
+        html = """
+        <div id="foo">
+          <div>
+            <label>
+            <input checked class="other" data-test="custom" type="radio"
+            value="J" name="beatle">John</label>
+          </div>
+          <div>
+            <label>
+            <input class="other" data-test="custom" type="radio"
+            value="P" name="beatle">Paul</label>
+          </div>
+          <div>
+            <label>
+            <input class="other" data-test="custom" type="radio"
+            value="G" name="beatle">George</label>
+          </div>
+          <div>
+            <label>
+            <input class="other" data-test="custom" type="radio"
+            value="R" name="beatle">Ringo</label>
+          </div>
+        </div>
+        """
+        self.check_html(widget, "beatle", "J", html=html)
+
     def test_compare_to_str(self):
         """
         The value is compared to its str().

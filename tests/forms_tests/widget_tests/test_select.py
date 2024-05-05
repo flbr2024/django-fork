@@ -326,6 +326,23 @@ class SelectTest(ChoiceWidgetTest):
         """
         self.check_html(self.widget(choices=choices), "time", None, html=html)
 
+    def test_options_with_option_attrs(self):
+        options = list(
+            self.widget(choices=self.beatles, option_attrs={"class": "other"}).options(
+                "name",
+                ["J"],
+                attrs={"class": "super"},
+            )
+        )
+        self.assertEqual(len(options), 4)
+        for option, (i, (value, label)) in zip(options, enumerate(self.beatles)):
+            self.assertEqual(option["name"], "name")
+            self.assertEqual(option["value"], value)
+            self.assertEqual(option["label"], label)
+            self.assertEqual(option["index"], str(i))
+            self.assertEqual(option["attrs"]["class"], "other")
+            self.assertIs(option["selected"], value == "J")
+
     def _test_optgroups(self, choices):
         groups = list(
             self.widget(choices=choices).optgroups(
