@@ -52,7 +52,7 @@ code, then run the following command:
 
 .. console::
 
-   $ django-admin startproject mysite myfirstdjangoproject
+   $ django-admin startproject mysite djangotutorial
 
 This will create a ``myfirstdjangoproject`` directory in your current directory. If it didn't
 work, see :ref:`troubleshooting-django-admin`.
@@ -80,7 +80,7 @@ Let's look at what :djadmin:`startproject` created:
 
 .. code-block:: text
 
-    myfirstdjangoproject/
+    djangotutorial/
         manage.py
         mysite/
             __init__.py
@@ -91,14 +91,14 @@ Let's look at what :djadmin:`startproject` created:
 
 These files are:
 
-* The outer :file:`myfirstdjangoproject/` root directory is a container for your project. Its
+* The outer :file:`djangotutprial/` root directory is a container for your project. Its
   name doesn't matter to Django; you can rename it to anything you like.
 
 * :file:`manage.py`: A command-line utility that lets you interact with this
   Django project in various ways. You can read all the details about
   :file:`manage.py` in :doc:`/ref/django-admin`.
 
-* The inner :file:`mysite/` directory is the actual Python package for your
+* The :file:`mysite/` directory is the actual Python package for your
   project. Its name is the Python package name you'll need to use to import
   anything inside it (e.g. ``mysite.urls``).
 
