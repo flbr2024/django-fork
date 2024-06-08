@@ -215,8 +215,7 @@ rather than creating directories.
     multiple apps. An app can be in multiple projects.
 
 Your apps can live anywhere on your :ref:`Python path <tut-searchpath>`. In
-this tutorial, we'll create our poll app in the `djangotutorial` directory so that it can be imported as its own top-level module,
-rather than a submodule of ``mysite``.
+this tutorial, we'll create our poll app in the `djangotutorial` directory.
 
 To create your app, make sure you're in the same directory as :file:`manage.py`
 and type this command:
