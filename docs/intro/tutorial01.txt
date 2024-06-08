@@ -91,7 +91,7 @@ Let's look at what :djadmin:`startproject` created:
 
 These files are:
 
-* The outer :file:`djangotutprial/` root directory is a container for your project. Its
+* The outer :file:`djangotutorial/` root directory is a container for your project. Its
   name doesn't matter to Django; you can rename it to anything you like.
 
 * :file:`manage.py`: A command-line utility that lets you interact with this
