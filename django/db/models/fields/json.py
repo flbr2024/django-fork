@@ -387,7 +387,7 @@ class KeyTransform(Transform):
         )
         return (
             "(CASE WHEN JSON_TYPE(%s, %%s) IN (%s) "
-            "THEN JSON_TYPE(%s, %%s) ELSE JSON_EXTRACT(%s, %%s) END)"
+            "THEN JSON_TYPE(%s, %%s) ELSE %s ->> %%s END)"
         ) % (lhs, datatype_values, lhs, lhs), (tuple(params) + (json_path,)) * 3
 
 
