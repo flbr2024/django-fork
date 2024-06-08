@@ -52,9 +52,9 @@ code, then run the following command:
 
 .. console::
 
-   $ django-admin startproject mysite
+   $ django-admin startproject mysite myfirstdjangoproject
 
-This will create a ``mysite`` directory in your current directory. If it didn't
+This will create a ``myfirstdjangoproject`` directory in your current directory. If it didn't
 work, see :ref:`troubleshooting-django-admin`.
 
 .. note::
@@ -80,7 +80,7 @@ Let's look at what :djadmin:`startproject` created:
 
 .. code-block:: text
 
-    mysite/
+    myfirstdjangoproject/
         manage.py
         mysite/
             __init__.py
@@ -91,7 +91,7 @@ Let's look at what :djadmin:`startproject` created:
 
 These files are:
 
-* The outer :file:`mysite/` root directory is a container for your project. Its
+* The outer :file:`myfirstdjangoproject/` root directory is a container for your project. Its
   name doesn't matter to Django; you can rename it to anything you like.
 
 * :file:`manage.py`: A command-line utility that lets you interact with this
@@ -123,7 +123,7 @@ These files are:
 The development server
 ======================
 
-Let's verify your Django project works. Change into the outer :file:`mysite` directory, if
+Let's verify your Django project works. Change into the :file:`myfirstdjangoproject` directory, if
 you haven't already, and run the following commands:
 
 .. console::
