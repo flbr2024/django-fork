@@ -54,7 +54,7 @@ code, then run the following command:
 
    $ django-admin startproject mysite djangotutorial
 
-This will create a ``myfirstdjangoproject`` directory in your current directory. If it didn't
+This will create a ``djangotutorial`` directory in your current directory. If it didn't
 work, see :ref:`troubleshooting-django-admin`.
 
 .. note::
