@@ -48,13 +48,13 @@ including database configuration, Django-specific options and
 application-specific settings.
 
 From the command line, ``cd`` into a directory where you'd like to store your
-code, then run the following command:
+code and make a new directory called ``djangotutorial``. Then run the following command:
 
 .. console::
 
    $ django-admin startproject mysite djangotutorial
 
-This will create a ``djangotutorial`` directory in your current directory. If it didn't
+This will create your project in the ``djangotutorial`` directory. If it didn't
 work, see :ref:`troubleshooting-django-admin`.
 
 .. note::
