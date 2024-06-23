@@ -437,15 +437,21 @@ subclass::
 
     * ``description``
         A string of optional extra text to be displayed at the top of each
-        fieldset, under the heading of the fieldset. This string is not
-        rendered for :class:`~django.contrib.admin.TabularInline` due to its
-        layout.
+        fieldset, under the heading of the fieldset.
 
         Note that this value is *not* HTML-escaped when it's displayed in
         the admin interface. This lets you include HTML if you so desire.
         Alternatively you can use plain text and
         :func:`django.utils.html.escape` to escape any HTML special
         characters.
+
+    .. admonition:: :class:`~django.contrib.admin.TabularInline` does not support fieldsets
+
+        Using ``fieldsets`` in conjunction with ``TabularInline`` has no effect,
+        as it does not support styles that modify its layout or behavior.
+        For example, applying the ``collapse`` class will not make the fields
+        collapsible, and using ``wide`` will not alter the horizontal spacing
+        within the ``TabularInline``.
 
 .. attribute:: ModelAdmin.filter_horizontal
 
