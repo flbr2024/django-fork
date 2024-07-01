@@ -58,8 +58,16 @@ like this::
     class Command(shell.Command):
         ...
 
-        self.shells.append("ptpython")
+        shell.Command.shells.append("ptpython")
 
         ...
 
-        def ptpython(self, options): ...
+        def ptpython(self, options):
+            from ptpython.repl import embed
+
+            imported_objects = self.get_and_report_namespace(options["verbosity"])
+            ...
+
+            embed(globals=imported_objects)
+
+
