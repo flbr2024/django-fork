@@ -91,9 +91,10 @@ class ShellCommandTestCase(SimpleTestCase):
         with mock.patch.dict(sys.modules, {"IPython": mock_ipython}):
             cmd.ipython({"verbosity": 0})
 
-        assert mock_ipython.start_ipython.mock_calls == [
-            mock.call(argv=[], user_ns=cmd.get_and_report_namespace(0))
-        ]
+        self.assertEqual(
+            mock_ipython.start_ipython.mock_calls,
+            [mock.call(argv=[], user_ns=cmd.get_and_report_namespace(0))],
+        )
 
     @mock.patch("django.core.management.commands.shell.select.select")  # [1]
     @mock.patch.dict("sys.modules", {"IPython": None})
@@ -111,9 +112,9 @@ class ShellCommandTestCase(SimpleTestCase):
         with mock.patch.dict(sys.modules, {"bpython": mock_bpython}):
             cmd.bpython({"verbosity": 0})
 
-        assert mock_bpython.embed.mock_calls == [
-            mock.call(cmd.get_and_report_namespace(0))
-        ]
+        self.assertEqual(
+            mock_bpython.embed.mock_calls, [mock.call(cmd.get_and_report_namespace(0))]
+        )
 
     @mock.patch("django.core.management.commands.shell.select.select")  # [1]
     @mock.patch.dict("sys.modules", {"bpython": None})
@@ -131,9 +132,10 @@ class ShellCommandTestCase(SimpleTestCase):
         with mock.patch.dict(sys.modules, {"code": mock_code}):
             cmd.python({"verbosity": 0, "no_startup": True})
 
-        assert mock_code.interact.mock_calls == [
-            mock.call(local=cmd.get_and_report_namespace(0))
-        ]
+        self.assertEqual(
+            mock_code.interact.mock_calls,
+            [mock.call(local=cmd.get_and_report_namespace(0))],
+        )
 
     # [1] Patch select to prevent tests failing when when the test suite is run
     # in parallel mode. The tests are run in a subprocess and the subprocess's
