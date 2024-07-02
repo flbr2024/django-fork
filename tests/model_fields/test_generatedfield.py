@@ -18,6 +18,8 @@ from django.test.utils import isolate_apps
 from .models import (
     Foo,
     GeneratedModel,
+    GeneratedModelChoices,
+    GeneratedModelChoicesVirtual,
     GeneratedModelFieldWithConverters,
     GeneratedModelNull,
     GeneratedModelNullVirtual,
@@ -300,6 +302,14 @@ class GeneratedFieldTestMixin:
         m2 = self._refresh_if_needed(m2)
         self.assertEqual(m2.lower_name, "name")
 
+    def test_choices_and_field_display(self):
+        wg_0 = self.choices_model.objects.create(c=0)
+        wg_1 = self.choices_model.objects.create(c=1)
+        wg_none = self.choices_model.objects.create(c=None)
+        self.assertEqual(wg_0.get_c_copy_display(), "Other")
+        self.assertEqual(wg_1.get_c_copy_display(), "First")
+        self.assertIsNone(wg_none.get_c_display())
+
 
 @skipUnlessDBFeature("supports_stored_generated_columns")
 class StoredGeneratedFieldTests(GeneratedFieldTestMixin, TestCase):
@@ -307,6 +317,7 @@ class StoredGeneratedFieldTests(GeneratedFieldTestMixin, TestCase):
     nullable_model = GeneratedModelNull
     output_field_db_collation_model = GeneratedModelOutputFieldDbCollation
     params_model = GeneratedModelParams
+    choices_model = GeneratedModelChoices
 
     def test_create_field_with_db_converters(self):
         obj = GeneratedModelFieldWithConverters.objects.create(field=uuid.uuid4())
@@ -320,3 +331,4 @@ class VirtualGeneratedFieldTests(GeneratedFieldTestMixin, TestCase):
     nullable_model = GeneratedModelNullVirtual
     output_field_db_collation_model = GeneratedModelOutputFieldDbCollationVirtual
     params_model = GeneratedModelParamsVirtual
+    choices_model = GeneratedModelChoicesVirtual
