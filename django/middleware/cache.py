@@ -117,10 +117,16 @@ class UpdateCacheMiddleware(MiddlewareMixin):
                 # max-age was set to 0, don't cache.
                 return response
         patch_response_headers(response, timeout)
-        if timeout and response.status_code == 200:
+        if (
+            timeout
+            and response.status_code == 200
+            and not response.has_header("X-Cache-Success")
+        ):
             cache_key = learn_cache_key(
                 request, response, timeout, self.key_prefix, cache=self.cache
             )
+            # Avoid duplicating cache.
+            response.headers["X-Cache-Success"] = "true"
             if hasattr(response, "render") and callable(response.render):
                 response.add_post_render_callback(
                     lambda r: self.cache.set(cache_key, r, timeout)
