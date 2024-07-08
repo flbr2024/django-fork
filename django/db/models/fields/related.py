@@ -578,6 +578,7 @@ class ForeignObject(RelatedField):
         return [
             *super().check(**kwargs),
             *self._check_to_fields_exist(),
+            *self._check_from_fields_exist(),
             *self._check_unique_target(),
         ]
 
@@ -601,6 +602,25 @@ class ForeignObject(RelatedField):
                             id="fields.E312",
                         )
                     )
+        return errors
+
+    def _check_from_fields_exist(self):
+        errors = []
+
+        for from_field in self.from_fields:
+            if from_field != RECURSIVE_RELATIONSHIP_CONSTANT:
+                try:
+                    self.model._meta.get_field(from_field)
+                except exceptions.FieldDoesNotExist:
+                    errors.append(
+                        checks.Error(
+                            "The from_field '%s' doesn't exist on the model '%s'."
+                            % (from_field, self.model._meta.label),
+                            obj=self,
+                            id="fields.E312",
+                        )
+                    )
+
         return errors
 
     def _check_unique_target(self):

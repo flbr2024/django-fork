@@ -1,6 +1,7 @@
 import re
 from unittest import skipUnless
 
+from django.core import checks
 from django.db import connection, models
 from django.test import TestCase
 from django.test.utils import isolate_apps
@@ -162,7 +163,7 @@ class CompositeFKTests(TestCase):
                 fk = models.ForeignKey("Foo", on_delete=models.CASCADE, **kwargs)
                 self.assertIsNotNone(fk.related_fields)
 
-    def test_composite_fk_to_field_conflicts_to_fields(self):
+    def test_composite_fk_to_field_conflicts_with_to_fields(self):
         with self.assertRaisesMessage(
             ValueError, "Cannot specify both 'to_field' and 'to_fields'."
         ):
@@ -174,3 +175,53 @@ class CompositeFKTests(TestCase):
                     to_fields=["bar_id"],
                 )
             )
+
+    def test_composite_fk_invalid_to_fields(self):
+        class Foo(models.Model):
+            pass
+
+        class Bar(models.Model):
+            foo_id = models.IntegerField()
+            foo = models.ForeignKey(
+                Foo,
+                on_delete=models.CASCADE,
+                from_fields=["foo_id", "id"],
+                to_fields=["id", "foo_id"],
+            )
+
+        self.assertEqual(
+            Bar.check(),
+            [
+                checks.Error(
+                    "The to_field 'foo_id' doesn't exist on the related model "
+                    "'composite_fk.Foo'.",
+                    obj=Bar._meta.get_field("foo"),
+                    id="fields.E312",
+                )
+            ],
+        )
+
+    def test_composite_fk_invalid_from_fields(self):
+        class Foo(models.Model):
+            bar_id = models.IntegerField()
+
+        class Bar(models.Model):
+            foo_id = models.IntegerField()
+            foo = models.ForeignKey(
+                Foo,
+                on_delete=models.CASCADE,
+                from_fields=["foo_id", "bar_id"],
+                to_fields=["id", "bar_id"],
+            )
+
+        self.assertEqual(
+            Bar.check(),
+            [
+                checks.Error(
+                    "The from_field 'bar_id' doesn't exist on the model "
+                    "'composite_fk.Bar'.",
+                    obj=Bar._meta.get_field("foo"),
+                    id="fields.E312",
+                )
+            ],
+        )
