@@ -1,7 +1,6 @@
 import re
 from unittest import skipUnless
 
-from django.core import checks
 from django.db import connection, models
 from django.test import TestCase
 from django.test.utils import isolate_apps
