@@ -1,4 +1,5 @@
 from datetime import datetime
+from unittest.mock import patch
 
 from django.core.exceptions import FieldError
 from django.db import DEFAULT_DB_ALIAS, connection
@@ -159,6 +160,12 @@ class TestQuery(SimpleTestCase):
         msg = "Cannot filter against a non-conditional expression."
         with self.assertRaisesMessage(TypeError, msg):
             query.build_where(Func(output_field=CharField()))
+
+    @patch("django.db.models.sql.query.Query.exists")
+    def test_exists_using(self, exists):
+        query = Query(Item)
+        query.has_results(using="default")
+        exists.assert_called_once_with()
 
 
 class TestQueryNoModel(TestCase):
