@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import Coalesce, Lower
 
 
 class Product(models.Model):
@@ -26,6 +27,34 @@ class Product(models.Model):
                 name="unicode_unit_list",
             ),
         ]
+
+
+class GeneratedFieldStoredProduct(models.Model):
+    price = models.IntegerField(null=True)
+    discounted_price = models.IntegerField(null=True)
+    rebate = models.GeneratedField(
+        expression=Coalesce("price", 0)
+        - Coalesce("discounted_price", Coalesce("price", 0)),
+        output_field=models.IntegerField(),
+        db_persist=True,
+    )
+
+    class Meta:
+        required_db_features = {"supports_stored_generated_columns"}
+
+
+class GeneratedFieldVirtualProduct(models.Model):
+    price = models.IntegerField(null=True)
+    discounted_price = models.IntegerField(null=True)
+    rebate = models.GeneratedField(
+        expression=Coalesce("price", 0)
+        - Coalesce("discounted_price", Coalesce("price", 0)),
+        output_field=models.IntegerField(),
+        db_persist=False,
+    )
+
+    class Meta:
+        required_db_features = {"supports_virtual_generated_columns"}
 
 
 class UniqueConstraintProduct(models.Model):
@@ -100,6 +129,100 @@ class UniqueConstraintInclude(models.Model):
                 name="name_include_color_uniq",
                 include=["color"],
             ),
+        ]
+
+
+class UniqueConstraintGeneratedFieldStoredProduct(models.Model):
+    name = models.CharField(max_length=255)
+    lower_name = models.GeneratedField(
+        expression=Lower("name"),
+        output_field=models.CharField(max_length=255),
+        db_persist=True,
+    )
+
+    class Meta:
+        required_db_features = {
+            "supports_table_check_constraints",
+            "supports_stored_generated_columns",
+        }
+        constraints = [
+            models.UniqueConstraint(
+                fields=["lower_name"], name="lower_name_uniq_stored"
+            )
+        ]
+
+
+class UniqueConstraintGeneratedFieldVirtualProduct(models.Model):
+    name = models.CharField(max_length=255)
+    lower_name = models.GeneratedField(
+        expression=Lower("name"),
+        output_field=models.CharField(max_length=255),
+        db_persist=False,
+    )
+
+    class Meta:
+        required_db_features = {
+            "supports_table_check_constraints",
+            "supports_virtual_generated_columns",
+        }
+        constraints = [
+            models.UniqueConstraint(
+                fields=["lower_name"], name="lower_name_uniq_virtual"
+            )
+        ]
+
+
+class UniqueConstraintNullsNonDistinctGeneratedFieldStoredModel(models.Model):
+    name = models.CharField(max_length=10, null=True)
+    lower_name_nullable = models.GeneratedField(
+        expression=models.Case(
+            models.When(name__isnull=True, then=None),
+            default=Lower("name"),
+            output_field=models.CharField(max_length=10, null=True),
+        ),
+        output_field=models.CharField(max_length=10, null=True),
+        db_persist=True,
+    )
+
+    class Meta:
+        required_db_features = {
+            "supports_table_check_constraints",
+            "supports_stored_generated_columns",
+            "supports_nulls_distinct_unique_constraints",
+        }
+        constraints = [
+            models.UniqueConstraint(
+                fields=["lower_name_nullable"],
+                name="lower_name_uniq_nulls_distinct_false_stored",
+                nulls_distinct=False,
+            )
+        ]
+
+
+class UniqueConstraintNullsNonDistinctGeneratedFieldVirtualModel(models.Model):
+    name = models.CharField(max_length=10, null=True)
+    lower_name_nullable = models.GeneratedField(
+        expression=models.Case(
+            models.When(name__isnull=True, then=None),
+            default=Lower("name"),
+            output_field=models.CharField(max_length=10, null=True),
+        ),
+        output_field=models.CharField(max_length=10, null=True),
+        db_persist=False,
+    )
+
+    class Meta:
+        required_db_features = {
+            "supports_table_check_constraints",
+            "supports_virtual_generated_columns",
+            "supports_nulls_distinct_unique_constraints",
+        }
+        constraints = [
+            models.UniqueConstraint(
+                fields=["lower_name_nullable"],
+                name="lower_name_uniq_nulls_distinct_false_virtual",
+                nulls_distinct=False,
+            )
         ]
 
 

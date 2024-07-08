@@ -144,6 +144,15 @@ class RangesModel(PostgreSQLModel):
     dates_inner = DateRangeField(blank=True, null=True)
 
 
+class RangesModelGeneratedField(PostgreSQLModel):
+    ints = IntegerRangeField(blank=True, null=True)
+    ints_generated = models.GeneratedField(
+        expression=models.F("ints"),
+        output_field=IntegerRangeField(null=True),
+        db_persist=True,
+    )
+
+
 class RangeLookupsModel(PostgreSQLModel):
     parent = models.ForeignKey(RangesModel, models.SET_NULL, blank=True, null=True)
     integer = models.IntegerField(blank=True, null=True)

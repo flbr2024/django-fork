@@ -548,4 +548,27 @@ class Migration(migrations.Migration):
                 "required_db_vendor": "postgresql",
             },
         ),
+        migrations.CreateModel(
+            name="RangesModelGeneratedField",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        verbose_name="ID",
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
+                ("ints", IntegerRangeField(blank=True, null=True)),
+                (
+                    "ints_generated",
+                    models.GeneratedField(
+                        db_persist=True,
+                        expression=models.F("ints"),
+                        output_field=IntegerRangeField(null=True),
+                    ),
+                ),
+            ],
+        ),
     ]

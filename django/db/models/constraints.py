@@ -68,6 +68,19 @@ class BaseConstraint:
     def remove_sql(self, model, schema_editor):
         raise NotImplementedError("This method must be implemented by a subclass.")
 
+    @classmethod
+    def _expression_refs_exclude(cls, model, expression, exclude):
+        get_field = model._meta.get_field
+        for field_name, *__ in model._get_expr_references(expression):
+            if field_name in exclude:
+                return True
+            field = get_field(field_name)
+            if field.generated and cls._expression_refs_exclude(
+                model, field.expression, exclude
+            ):
+                return True
+        return False
+
     def validate(self, model, instance, exclude=None, using=DEFAULT_DB_ALIAS):
         raise NotImplementedError("This method must be implemented by a subclass.")
 
@@ -606,36 +619,51 @@ class UniqueConstraint(BaseConstraint):
         queryset = model._default_manager.using(using)
         if self.fields:
             lookup_kwargs = {}
+            generated_field_names = set()
             for field_name in self.fields:
                 if exclude and field_name in exclude:
                     return
                 field = model._meta.get_field(field_name)
-                lookup_value = getattr(instance, field.attname)
-                if (
-                    self.nulls_distinct is not False
-                    and lookup_value is None
-                    or (
-                        lookup_value == ""
-                        and connections[
-                            using
-                        ].features.interprets_empty_strings_as_nulls
-                    )
-                ):
-                    # A composite constraint containing NULL value cannot cause
-                    # a violation since NULL != NULL in SQL.
-                    return
-                lookup_kwargs[field.name] = lookup_value
+                if field.generated:
+                    if exclude and self._expression_refs_exclude(
+                        model, field.expression, exclude
+                    ):
+                        return
+                    generated_field_names.add(field.name)
+                else:
+                    lookup_value = getattr(instance, field.attname)
+                    if (
+                        self.nulls_distinct is not False
+                        and lookup_value is None
+                        or (
+                            lookup_value == ""
+                            and connections[
+                                using
+                            ].features.interprets_empty_strings_as_nulls
+                        )
+                    ):
+                        # A composite constraint containing NULL value cannot cause
+                        # a violation since NULL != NULL in SQL.
+                        return
+                    lookup_kwargs[field.name] = lookup_value
+            if generated_field_names:
+                lookup_kwargs.update(
+                    {
+                        field_name: value
+                        for field_name, value in instance._get_field_value_map(
+                            meta=model._meta, exclude=exclude
+                        ).items()
+                        if field_name in generated_field_names
+                    }
+                )
             queryset = queryset.filter(**lookup_kwargs)
         else:
             # Ignore constraints with excluded fields.
-            if exclude:
-                for expression in self.expressions:
-                    if hasattr(expression, "flatten"):
-                        for expr in expression.flatten():
-                            if isinstance(expr, F) and expr.name in exclude:
-                                return
-                    elif isinstance(expression, F) and expression.name in exclude:
-                        return
+            if exclude and any(
+                self._expression_refs_exclude(model, expression, exclude)
+                for expression in self.expressions
+            ):
+                return
             replacements = {
                 F(field): value
                 for field, value in instance._get_field_value_map(
