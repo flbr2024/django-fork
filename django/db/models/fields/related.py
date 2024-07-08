@@ -949,6 +949,8 @@ class ForeignKey(ForeignObject):
         to_fields=None,
         **kwargs,
     ):
+        if to_field is not None and to_fields is not None:
+            raise ValueError("Cannot specify both 'to_field' and 'to_fields'.")
         try:
             to._meta.model_name
         except AttributeError:

@@ -162,3 +162,16 @@ class CompositeFKTests(TestCase):
             ):
                 fk = models.ForeignKey("Foo", on_delete=models.CASCADE, **kwargs)
                 self.assertIsNotNone(fk.related_fields)
+
+    def test_composite_fk_to_field_conflicts_to_fields(self):
+        with self.assertRaisesMessage(
+            ValueError, "Cannot specify both 'to_field' and 'to_fields'."
+        ):
+            self.assertIsNotNone(
+                models.ForeignKey(
+                    "Foo",
+                    on_delete=models.CASCADE,
+                    to_field="foo_id",
+                    to_fields=["bar_id"],
+                )
+            )
