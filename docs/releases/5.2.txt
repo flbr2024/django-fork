@@ -128,7 +128,7 @@ Database backends
 Decorators
 ~~~~~~~~~~
 
-* ...
+* :func:`~django.utils.decorators.method_decorator` works well with async functions
 
 Email
 ~~~~~
