@@ -26,7 +26,14 @@ from django.test.utils import isolate_apps
 from django.utils import timezone
 
 from . import PostgreSQLTestCase
-from .models import HotelReservation, IntegerArrayModel, RangesModel, Room, Scene
+from .models import (
+    HotelReservation,
+    IntegerArrayModel,
+    RangesModel,
+    RangesModelGeneratedField,
+    Room,
+    Scene,
+)
 
 try:
     from django.contrib.postgres.constraints import ExclusionConstraint
@@ -865,6 +872,25 @@ class ExclusionConstraintTests(PostgreSQLTestCase):
         constraint.validate(RangesModel, RangesModel(ints=(10, 19)))
         constraint.validate(RangesModel, RangesModel(ints=(51, 60)))
         constraint.validate(RangesModel, RangesModel(ints=(10, 20)), exclude={"ints"})
+
+    def test_validate_generated_field_range_adjacent(self):
+        constraint = ExclusionConstraint(
+            name="ints_adjacent",
+            expressions=[("ints_generated", RangeOperators.ADJACENT_TO)],
+            violation_error_code="custom_code",
+            violation_error_message="Custom error message.",
+        )
+        RangesModelGeneratedField.objects.create(ints=(20, 50))
+
+        range_obj = RangesModelGeneratedField(ints=(3, 20))
+        with self.assertRaisesMessage(ValidationError, "Custom error message."):
+            constraint.validate(RangesModelGeneratedField, range_obj)
+
+        # Excluding referenced or generated field should skip validation.
+        constraint.validate(RangesModelGeneratedField, range_obj, exclude={"ints"})
+        constraint.validate(
+            RangesModelGeneratedField, range_obj, exclude={"ints_generated"}
+        )
 
     def test_validate_with_custom_code_and_condition(self):
         constraint = ExclusionConstraint(
