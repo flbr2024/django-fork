@@ -3,8 +3,9 @@ Classes to represent the definitions of aggregate functions.
 """
 
 from django.core.exceptions import FieldError, FullResultSet
-from django.db.models.expressions import Case, Func, Star, Value, When
+from django.db.models.expressions import Case, Func, Star, Value, When, connection
 from django.db.models.fields import IntegerField
+from django.db.models.fields.json import JSONField
 from django.db.models.functions.comparison import Coalesce
 from django.db.models.functions.mixins import (
     FixDurationInputMixin,
@@ -20,6 +21,7 @@ __all__ = [
     "StdDev",
     "Sum",
     "Variance",
+    "JSONArrayAgg",
 ]
 
 
@@ -211,3 +213,12 @@ class Variance(NumericOutputFieldMixin, Aggregate):
 
     def _get_repr_options(self):
         return {**super()._get_repr_options(), "sample": self.function == "VAR_SAMP"}
+
+class JSONArrayAgg(Aggregate):
+    name = "JSONArrayAgg"
+    output_field = JSONField()
+    arity = 1
+
+    def __init__(self, expression, **extra):
+        self.function = "JSON_GROUP_ARRAY" if connection.vendor == "sqlite" else "JSON_ARRAYAGG"
+        super().__init__(expression, **extra)
