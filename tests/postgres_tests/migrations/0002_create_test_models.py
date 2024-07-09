@@ -570,5 +570,8 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "required_db_vendor": "postgresql",
+            },
         ),
     ]

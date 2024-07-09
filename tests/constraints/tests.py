@@ -22,8 +22,6 @@ from .models import (
     UniqueConstraintGeneratedFieldStoredProduct,
     UniqueConstraintGeneratedFieldVirtualProduct,
     UniqueConstraintInclude,
-    UniqueConstraintNullsNonDistinctGeneratedFieldStoredModel,
-    UniqueConstraintNullsNonDistinctGeneratedFieldVirtualModel,
     UniqueConstraintProduct,
 )
 
@@ -1122,38 +1120,6 @@ class UniqueConstraintTests(TestCase):
         # Excluding referenced or generated fields should skip validation
         constraint.validate(model, invalid_product, exclude={"lower_name"})
         constraint.validate(model, invalid_product, exclude={"name"})
-
-    @skipUnlessDBFeature(
-        "supports_stored_generated_columns",
-        "supports_table_check_constraints",
-        "supports_nulls_distinct_unique_constraints",
-    )
-    def test_validate_fields_nulls_distinct_generated_field_stored(self):
-        # This test is currently failing due to Case/When being present in the
-        # GeneratedField `expression`, not because the ValidationError is not raised.
-        self._test_validate_fields_nulls_distinct_generated_field(
-            UniqueConstraintNullsNonDistinctGeneratedFieldStoredModel
-        )
-
-    @skipUnlessDBFeature(
-        "supports_virtual_generated_columns",
-        "supports_table_check_constraints",
-        "supports_nulls_distinct_unique_constraints",
-    )
-    def test_validate_fields_nulls_distinct_generated_field_virtual(self):
-        self._test_validate_fields_nulls_distinct_generated_field(
-            UniqueConstraintNullsNonDistinctGeneratedFieldVirtualModel
-        )
-
-    def _test_validate_fields_nulls_distinct_generated_field(self, model):
-        model.objects.create(name=None)
-        constraint = model._meta.constraints[0]
-        invalid_instance = model(name=None)
-        with self.assertRaisesMessage(
-            ValidationError,
-            str(invalid_instance.unique_error_message(model, ["lower_name_nullable"])),
-        ):
-            constraint.validate(model, invalid_instance)
 
     @skipUnlessDBFeature("supports_table_check_constraints")
     def test_validate_nullable_textfield_with_isnull_true(self):

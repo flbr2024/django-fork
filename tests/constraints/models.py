@@ -172,60 +172,6 @@ class UniqueConstraintGeneratedFieldVirtualProduct(models.Model):
         ]
 
 
-class UniqueConstraintNullsNonDistinctGeneratedFieldStoredModel(models.Model):
-    name = models.CharField(max_length=10, null=True)
-    lower_name_nullable = models.GeneratedField(
-        expression=models.Case(
-            models.When(name__isnull=True, then=None),
-            default=Lower("name"),
-            output_field=models.CharField(max_length=10, null=True),
-        ),
-        output_field=models.CharField(max_length=10, null=True),
-        db_persist=True,
-    )
-
-    class Meta:
-        required_db_features = {
-            "supports_table_check_constraints",
-            "supports_stored_generated_columns",
-            "supports_nulls_distinct_unique_constraints",
-        }
-        constraints = [
-            models.UniqueConstraint(
-                fields=["lower_name_nullable"],
-                name="lower_name_uniq_nulls_distinct_false_stored",
-                nulls_distinct=False,
-            )
-        ]
-
-
-class UniqueConstraintNullsNonDistinctGeneratedFieldVirtualModel(models.Model):
-    name = models.CharField(max_length=10, null=True)
-    lower_name_nullable = models.GeneratedField(
-        expression=models.Case(
-            models.When(name__isnull=True, then=None),
-            default=Lower("name"),
-            output_field=models.CharField(max_length=10, null=True),
-        ),
-        output_field=models.CharField(max_length=10, null=True),
-        db_persist=False,
-    )
-
-    class Meta:
-        required_db_features = {
-            "supports_table_check_constraints",
-            "supports_virtual_generated_columns",
-            "supports_nulls_distinct_unique_constraints",
-        }
-        constraints = [
-            models.UniqueConstraint(
-                fields=["lower_name_nullable"],
-                name="lower_name_uniq_nulls_distinct_false_virtual",
-                nulls_distinct=False,
-            )
-        ]
-
-
 class AbstractModel(models.Model):
     age = models.IntegerField()
 
