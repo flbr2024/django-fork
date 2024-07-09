@@ -8,6 +8,11 @@ from django.core.exceptions import EmptyResultSet, FieldError, FullResultSet
 from django.db import DatabaseError, NotSupportedError
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.expressions import F, OrderBy, RawSQL, Ref, Value
+from django.db.models.fields.composite import (
+    Cols,
+    CompositePrimaryKey,
+    unnest_composite_fields,
+)
 from django.db.models.functions import Cast, Random
 from django.db.models.lookups import Lookup
 from django.db.models.query_utils import select_related_descend
@@ -988,6 +993,7 @@ class SQLCompiler:
         # alias for a given field. This also includes None -> start_alias to
         # be used by local fields.
         seen_models = {None: start_alias}
+        select_mask_fields = set(unnest_composite_fields(select_mask))
 
         for field in opts.concrete_fields:
             model = field.model._meta.concrete_model
@@ -1008,7 +1014,7 @@ class SQLCompiler:
                 # parent model data is already present in the SELECT clause,
                 # and we want to avoid reloading the same data again.
                 continue
-            if select_mask and field not in select_mask:
+            if select_mask and field not in select_mask_fields:
                 continue
             alias = self.query.join_parent_model(opts, model, start_alias, seen_models)
             column = field.get_col(alias)
@@ -1101,9 +1107,10 @@ class SQLCompiler:
                 )
             return results
         targets, alias, _ = self.query.trim_joins(targets, joins, path)
+        target_fields = unnest_composite_fields(targets)
         return [
             (OrderBy(transform_function(t, alias), descending=descending), False)
-            for t in targets
+            for t in target_fields
         ]
 
     def _setup_joins(self, pieces, opts, alias):
@@ -1499,12 +1506,21 @@ class SQLCompiler:
 
     def get_converters(self, expressions):
         converters = {}
+        other_converters = {}
         for i, expression in enumerate(expressions):
-            if expression:
+            if isinstance(expression, Cols):
+                cols = expression.get_source_expressions()
+                cols_converters = self.get_converters(cols)
+                for j, (convs, col) in cols_converters.items():
+                    converters[i + j] = (convs, col)
+                pos = (i, i + len(expression))
+                other_converters[pos] = ((Cols.db_converter,), expression)
+            elif expression:
                 backend_converters = self.connection.ops.get_db_converters(expression)
                 field_converters = expression.get_db_converters(self.connection)
                 if backend_converters or field_converters:
                     converters[i] = (backend_converters + field_converters, expression)
+        converters.update(other_converters)
         return converters
 
     def apply_converters(self, rows, converters):
@@ -1512,6 +1528,8 @@ class SQLCompiler:
         converters = list(converters.items())
         for row in map(list, rows):
             for pos, (convs, expression) in converters:
+                if isinstance(pos, tuple):
+                    pos = slice(*pos)
                 value = row[pos]
                 for converter in convs:
                     value = converter(value, expression, connection)
@@ -2058,9 +2076,12 @@ class SQLUpdateCompiler(SQLCompiler):
         query.add_fields(fields)
         super().pre_sql_setup()
 
+        # If the table has a composite pk, idents are pre-selected because not all
+        # databases support expressions such as "(id_1, id_2) IN (SELECT ...)".
+        is_composite_pk = isinstance(meta.pk, CompositePrimaryKey)
         must_pre_select = (
             count > 1 and not self.connection.features.update_can_self_select
-        )
+        ) or is_composite_pk
 
         # Now we adjust the current query: reset the where clause and get rid
         # of all the tables we don't need (since they're in the sub-select).
@@ -2072,7 +2093,8 @@ class SQLUpdateCompiler(SQLCompiler):
             idents = []
             related_ids = collections.defaultdict(list)
             for rows in query.get_compiler(self.using).execute_sql(MULTI):
-                idents.extend(r[0] for r in rows)
+                pks = [row if is_composite_pk else row[0] for row in rows]
+                idents.extend(pks)
                 for parent, index in related_ids_index:
                     related_ids[parent].extend(r[index] for r in rows)
             self.query.add_filter("pk__in", idents)
