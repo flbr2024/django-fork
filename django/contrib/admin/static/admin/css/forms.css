@@ -491,7 +491,8 @@ body.popup .submit-row {
 .related-lookup {
     margin-left: 5px;
     display: inline-block;
-    vertical-align: middle;
+    margin-top: auto;
+    margin-bottom: auto;
     background-repeat: no-repeat;
     background-size: 14px;
 }
